@@ -1,59 +1,45 @@
 package com.laironlf.pz24;
 
+import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.net.Uri;
+import android.os.Environment;
+import android.provider.MediaStore;
+
+import android.util.Log;
+import android.widget.ImageView;
+
+import androidx.core.content.FileProvider;
+
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.content.Intent;
-import android.graphics.Bitmap;
-import android.net.Uri;
-import android.os.Bundle;
-import android.os.Environment;
-import android.provider.MediaStore;
-import android.util.Log;
-import android.view.View;
-import android.widget.ImageView;
 
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.core.content.FileProvider;
-
-public class MainActivity extends Activity {
+public class PhotoModule extends Activity {
     final int REQUEST_CODE_PHOTO = 1;
     final String TAG = "myLogs";
     private Uri imageUri;
-    PhotoModule photoModule;
-
-    ConstraintLayout main_layout;
     ImageView ivPhoto;
 
-    @SuppressLint("ClickableViewAccessibility")
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        ivPhoto = (ImageView) findViewById(R.id.ivPhoto);
-        main_layout = (ConstraintLayout) findViewById(R.id.main_layout);
-        main_layout.setOnTouchListener(new SwipeListener(){
-            @Override
-            public void swipeLeft() {
-                super.swipeLeft();
-                onClickPhoto();
-            }
-        });
+    Context context;
+    PackageManager packageManager;
 
+    public PhotoModule(Context context, ImageView imageView, PackageManager pk){
+        ivPhoto = imageView;
+        this.context = context;
+        this.packageManager = pk;
     }
-
-
-
     @SuppressLint("QueryPermissionsNeeded")
     public void onClickPhoto() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         // Ensure that there's a camera activity to handle the intent
-        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+        if (takePictureIntent.resolveActivity(packageManager) != null) {
             // Create the File where the photo should go
             File photoFile = null;
             try {
@@ -63,9 +49,7 @@ public class MainActivity extends Activity {
             }
             // Continue only if the File was successfully created
             if (photoFile != null) {
-                imageUri = FileProvider.getUriForFile(this,
-                        "com.example.android.fileprovider",
-                        photoFile);
+                imageUri = FileProvider.getUriForFile(context, "com.example.android.fileprovider", photoFile);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
                 startActivityForResult(takePictureIntent, REQUEST_CODE_PHOTO);
                 overridePendingTransition(R.anim.to_left_in, R.anim.to_left_out);
@@ -100,5 +84,4 @@ public class MainActivity extends Activity {
             Log.d(TAG, "Canceled");
         }
     }
-
 }
