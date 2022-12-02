@@ -3,6 +3,7 @@ package com.laironlf.pz24;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -10,23 +11,35 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Point;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.Display;
+import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import android.widget.ScrollView;
+import android.widget.TextView;
 
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.FileProvider;
 
 public class MainActivity extends Activity {
     final int REQUEST_CODE_PHOTO = 1;
+    int width;
+
     final String TAG = "myLogs";
     private Uri imageUri;
-    PhotoModule photoModule;
+    File storageDir;
 
+    ScrollView scrollView;
     ConstraintLayout main_layout;
     ImageView ivPhoto;
 
@@ -35,19 +48,84 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        getWidth();
+
+        scrollView = (ScrollView) findViewById(R.id.scrollPhoto);
         ivPhoto = (ImageView) findViewById(R.id.ivPhoto);
         main_layout = (ConstraintLayout) findViewById(R.id.main_layout);
+        storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        LinearLayout linearLayout = createLinearLayout();
+        setContentView(linearLayout);
+
+//        photoModule = new PhotoModule(this, getPackageManager(), getExternalFilesDir(Environment.DIRECTORY_PICTURES));
+
         main_layout.setOnTouchListener(new SwipeListener(){
             @Override
             public void swipeLeft() {
                 super.swipeLeft();
                 onClickPhoto();
+//                Bitmap bitmap = photoModule.onClickPhoto();
+//                ivPhoto.setImageBitmap(bitmap);
             }
         });
 
     }
 
+    private void getWidth(){
+        Display display = getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        width = size.x;
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        String[] titles = storageDir.list();
+
+
+        TextView textView = (TextView) findViewById(R.id.textTest);
+        textView.setText(titles[0]);
+    }
+
+    private void fillScrollView(String[] filesPaths){
+        int length = filesPaths.length/2;
+        int k = 0;
+        for (int i = 0; i < length; i++){
+            LinearLayout linearLayout = createLinearLayout();
+            for (int j = 0; j < 2; j++){
+
+                k++;
+            }
+        }
+    }
+
+    private LinearLayout createLinearLayout() {
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        params.gravity = Gravity.CENTER;
+        LinearLayout linearLayout = new LinearLayout(this);
+        linearLayout.setLayoutParams(params);
+        scrollView.addView(linearLayout);
+        return linearLayout;
+
+    }
+
+    private void fillPicture(LinearLayout linearLayout){
+        int bitWidth = width / 3;
+
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(width, width);
+        params.rightMargin = bitWidth/4;
+        params.leftMargin = bitWidth/4;
+
+        ImageView imageView = new ImageView(this);
+        imageView.setLayoutParams(params);
+        linearLayout.addView(imageView);
+    }
+
+    private Bitmap loadImageFromAsset(String absolutePath) {
+        return BitmapFactory.decodeFile(absolutePath);
+    }
 
     @SuppressLint("QueryPermissionsNeeded")
     public void onClickPhoto() {
@@ -78,7 +156,6 @@ public class MainActivity extends Activity {
         @SuppressLint("SimpleDateFormat")
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String imageFileName = "JPEG_" + timeStamp + "_";
-        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         File image = File.createTempFile(
                 imageFileName,  /* prefix */
                 ".jpg",         /* suffix */
